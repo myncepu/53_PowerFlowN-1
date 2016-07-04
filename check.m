@@ -1,4 +1,4 @@
-clc, clear all;
+function check(iBranch)
 %%
 [PQ, PV, REF, NONE, BUS_I, BUS_TYPE, PD, QD, GS, BS, BUS_AREA, VM, ...
     VA, BASE_KV, ZONE, VMAX, VMIN, LAM_P, LAM_Q, MU_VMAX, MU_VMIN] = idx_bus;
@@ -11,7 +11,7 @@ clc, clear all;
 
 filename = 'my_case14.m';
 %% 断开支路1-2
-iBranch = 21;
+% iBranch = 15;
 switch iBranch
     case 1
         [bOff, fV, V, fP, P] = SecurityCertification(filename, iBranch)
@@ -21,20 +21,17 @@ switch iBranch
         [bOff, fV, V, fP, P] = SecurityCertification(MPC, iBranch)
     case 2
         [bOff, fV, V, fP, P] = SecurityCertification(filename, iBranch)
-        % 修改电网参数，使得线路功率不越限
         MPC = loadcase(filename);
         MPC.gen(4, [PG, QG]) = MPC.gen(1, [PG, QG]); % 调整发电机4输出功率
         [bOff, fV, V, fP, P] = SecurityCertification(MPC, iBranch)
     case 3 % 支路2-3双回路断开一回路
         [bOff, fV, V, fP, P] = SecurityCertification(filename, iBranch)
-        % 修改电网参数，使得线路功率不越限
         MPC = loadcase(filename);
         MPC.gen(3, [PG, QG]) = MPC.gen(1, [PG, QG]);
         MPC.bus(4, [PD, QD]) = MPC.bus(4, [PD, QD]) * 1.1;
         [bOff, fV, V, fP, P] = SecurityCertification(MPC, iBranch)
     case 4
         [bOff, fV, V, fP, P] = SecurityCertification(filename, iBranch)
-        % 修改电网参数，使得线路功率不越限
         MPC = loadcase(filename);
         MPC.gen(4, [PG, QG]) = MPC.gen(1, [PG, QG]);
         [bOff, fV, V, fP, P] = SecurityCertification(MPC, iBranch)
@@ -59,12 +56,10 @@ switch iBranch
         MPC = loadcase(filename);
         MPC.gen(5, [PG, QG]) = MPC.gen(1, [PG, QG]);
         [bOff, fV, V, fP, P] = SecurityCertification(MPC, iBranch)
-    case 10 % 有问题
+    case 10
         [bOff, fV, V, fP, P] = SecurityCertification(filename, iBranch)
         MPC = loadcase(filename);
-        % MPC.gen(4, [PG, QG]) = MPC.gen(1, [PG, QG]);
-        % MPC.gen(5, [PG, QG]) = MPC.gen(1, [PG, QG]);
-        MPC.bus(:, [PD, QD]) = MPC.bus(:, [PD, QD]) * 1.1;
+        MPC.gen(5, [PG, QG]) = MPC.gen(1, [PG, QG]);
         [bOff, fV, V, fP, P] = SecurityCertification(MPC, iBranch)
     case 11
         [bOff, fV, V, fP, P] = SecurityCertification(filename, iBranch)
@@ -77,23 +72,20 @@ switch iBranch
         MPC = loadcase(filename);
         MPC.bus(12, [PD, QD]) = MPC.bus(12, [PD, QD]) * 0.1;
         [bOff, fV, V, fP, P] = SecurityCertification(MPC, iBranch)
-    case 13 % 有问题
+    case 13
         [bOff, fV, V, fP, P] = SecurityCertification(filename, iBranch)
         MPC = loadcase(filename);
-        % MPC.bus(9:14, [PD, QD]) = MPC.bus(9:14, [PD, QD]) * 0.8;
-        % MPC.bus(12, [PD, QD]) = MPC.bus(12, [PD, QD]) + 5;
-        % MPC.bus(13:14, [PD, QD]) = MPC.bus(13:14, [PD, QD]) * 0.5;
-        MPC.gen(5, [PG, QG]) = MPC.gen(5, [PG, QG]) * 0.5;
-        MPC.bus(12, [PD, QD]) = MPC.bus(12, [PD, QD]) * 0.5;
-        MPC.bus(13, [PD, QD]) = MPC.bus(13, [PD, QD]) * 0.0;
-        MPC.bus(14, [PD, QD]) = MPC.bus(14, [PD, QD]) * 0.3;
+        MPC.gen(4, [PG, QG]) = MPC.gen(1, [PG, QG]);
+        MPC.bus([9, 10, 11, 13, 14], [PD, QD]) = MPC.bus([9, 10, 11, 13, 14], [PD, QD]) * 0.2;
+	MPC.branch(19, [BR_R, BR_X]) = MPC.branch(19, [BR_R, BR_X]) * 1e9; % 支路12-13
         [bOff, fV, V, fP, P] = SecurityCertification(MPC, iBranch)
     case 14
         [bOff, fV, V, fP, P] = SecurityCertification(filename, iBranch)
-    case 15 % 有问题
+    case 15
         [bOff, fV, V, fP, P] = SecurityCertification(filename, iBranch)
         MPC = loadcase(filename);
-        MPC.bus(9, [PD, QD]) = MPC.bus(9, [PD, QD]) * 0.3;
+        MPC.gen(4, [PG, QG]) = MPC.gen(1, [PG, QG]);
+	MPC.branch(9, [BR_R, BR_X]) = MPC.branch(9, [BR_R, BR_X]) * 1e9; % 支路4-9
         [bOff, fV, V, fP, P] = SecurityCertification(MPC, iBranch)
     case 16
         [bOff, fV, V, fP, P] = SecurityCertification(filename, iBranch)
@@ -119,7 +111,6 @@ switch iBranch
         [bOff, fV, V, fP, P] = SecurityCertification(MPC, iBranch)
     case 21
         [bOff, fV, V, fP, P] = SecurityCertification(filename, iBranch)
-        % 修改电网参数，使得线路功率不越限
         MPC = loadcase(filename);
         MPC.gen(3, [PG, QG]) = MPC.gen(1, [PG, QG]);
         MPC.bus(4, [PD, QD]) = MPC.bus(4, [PD, QD]) * 1.1;
