@@ -12,14 +12,15 @@ function [branchOff, flagVoltageViolation, voltageViolation, flagPowerViolation,
 % IEEE14 包含20个支路，增加一个支路
 % n-1 安全校验, 依次断开每条线路，计算潮流
 mpopt = mpoption('verbose', 0, 'out.all', 0); % 潮流计算不输出结果
-rOrigin = runpf('my_case14.m', mpopt); % 原来电网潮流计算
+rOrigin = runpf(filename, mpopt); % 原来电网潮流计算
+rOrigin.branch(iBranch, :) = [];
 
 MPC = loadcase(filename);
 branchOff = MPC.branch(iBranch, [F_BUS, T_BUS]);
 MPC.branch(iBranch, :) = []; % 断开支路iBranch
 
-savecase('my_case14_SC.m', MPC);
-rNow = runpf('my_case14_SC.m', mpopt); % 新电网潮流计算
+% savecase('my_case14_SC.m', MPC);
+rNow = runpf(MPC, mpopt); % 新电网潮流计算
 flagVoltageViolation = any(abs(rNow.bus(:, VM) - 1) > 0.5); % 判断断开支路后电网电压是否越限
 voltageViolation = [];
 for k = 1:size(MPC.bus)
@@ -28,7 +29,7 @@ for k = 1:size(MPC.bus)
     end
 end
 branchPowerOrigin = rOrigin.branch(:, [PF, QF, PT, QT]);
-branchPowerOrigin(iBranch, :) = [];
+% branchPowerOrigin(iBranch, :) = [];
 branchApparentPowerOrigin = [sqrt(branchPowerOrigin(:, 1) .^ 2 + branchPowerOrigin(:, 2) .^ 2) ...
     sqrt(branchPowerOrigin(:, 3) .^ 2 + branchPowerOrigin(:, 4) .^ 2)];
 branchPowerNow = rNow.branch(:, [PF, QF, PT, QT]);
@@ -42,7 +43,9 @@ for j = 1:size(MPC.branch, 1)
     if any(powerViolationBranch(j, 3:4) ~= 0)
 %         powerViolation = [powerViolation; powerViolationBranch(j, :), ...
 %             branchApparentPowerOrigin(j, :), branchApparentPowerNow(j, :)];
-        powerViolation = [powerViolation; powerViolationBranch(j, 1:2), ...
-            branchApparentPowerOrigin(j, :), branchApparentPowerNow(j, :)];
+        powerViolation = [powerViolation; rOrigin.branch(j, [F_BUS, T_BUS]), ...
+            branchApparentPowerOrigin(j, :), rOrigin.branch(j, [PF, QF, PT, QT]); ...
+            rNow.branch(j, [F_BUS, T_BUS]), branchApparentPowerNow(j, :), ...
+            rNow.branch(j, [PF, QF, PT, QT])];
     end
 end
